@@ -73,7 +73,9 @@ class enemy1(pygame.sprite.Sprite):
     #max acc(constant)
     self.acc = 5
 
-  def update(self, walls):
+  def update(self, walls, roomnum):
+    if roomnum != 0:
+      self.kill()
     self.accAng = math.atan2(player.rect.y - self.rect.y, player.rect.x - self.rect.x)
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
@@ -220,7 +222,8 @@ while not done:
 
   #updates the player with the walls of the current room to detect collision
   player.update(currentRoom.wall_list)
-  enemy.update(currentRoom.wall_list)
+  
+  enemy.update(currentRoom.wall_list, roomNum)
 
   #this handles when to swithf to the next room based on location of player
   #first if controls when the player exits screen left
