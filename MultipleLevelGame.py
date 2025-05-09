@@ -4,6 +4,7 @@
 
 import pygame
 import random
+import math
 
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -50,6 +51,42 @@ class Player(pygame.sprite.Sprite):
         self.rect.left = block.rect.right
 
     self.rect.y += self.yvel
+    wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
+    for block in wall_hit_list:
+      if self.yvel > 0:
+        self.rect.bottom = block.rect.top
+      else:
+        self.rect.top = block.rect.bottom
+class enemy1(pygame.sprite.Sprite):
+
+  def __init__(self, player):
+    pygame.sprite.Sprite.__init__(self)
+    self.image = pygame.Surface([20, 20])
+    self.image.fill(red)
+    self.rect = self.image.get_rect()
+    self.rect.x = 550
+    self.rect.y = 180
+    self.xvel = 0
+    self.yvel = 0
+    #acceleration variables aming player
+    self.accAng = 0
+    #max acc(constant)
+    self.acc = 5
+
+  def update(self, walls):
+    self.accAng = math.atan2(player.rect.y - self.rect.y, player.rect.x - self.rect.x)
+    self.xvel = math.cos(self.accAng) * self.acc
+    self.yvel = math.sin(self.accAng) * self.acc
+    self.rect.x += self.xvel
+    self.rect.y += self.yvel
+
+    wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
+    for block in wall_hit_list:
+      if self.xvel > 0:
+        self.rect.right = block.rect.left
+      else:
+        self.rect.left = block.rect.right
+
     wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
     for block in wall_hit_list:
       if self.yvel > 0:
@@ -126,9 +163,11 @@ pygame.display.set_caption("Multiple Maze Madness")
 
 #starting location of player, right in middle of opening
 player = Player(10, 180)
+enemy = enemy1(player)
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+all_sprites.add(enemy)
 
 clock = pygame.time.Clock()
 
@@ -181,6 +220,7 @@ while not done:
 
   #updates the player with the walls of the current room to detect collision
   player.update(currentRoom.wall_list)
+  enemy.update(currentRoom.wall_list)
 
   #this handles when to swithf to the next room based on location of player
   #first if controls when the player exits screen left
