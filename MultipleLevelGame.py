@@ -74,7 +74,7 @@ class enemy1(pygame.sprite.Sprite):
     #acceleration variables aming player
     self.accAng = 0
     #max acc(constant)
-    self.acc = 4
+    self.acc = 3
     self.m_player = player
     self.flg = True
 
@@ -104,14 +104,16 @@ class enemy1(pygame.sprite.Sprite):
       else:
         self.rect.top = block.rect.bottom
 
+
   def changeflg(self):
     self.flg = not self.flg
     if self.flg:
         self.acc = 4
     else:
-        self.acc = 7
+        self.acc = 6
+    # this is a thread that will run every 2 seconds it only run once so need to keep calling it
 
-    threading.Timer(2, self.changeflg).start()
+    threading.Timer(4, self.changeflg).start()
 
 #basic room class, with list of walls present
 class Room():
