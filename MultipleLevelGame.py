@@ -5,6 +5,7 @@
 import pygame
 import random
 import math
+import threading 
 
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -71,12 +72,17 @@ class enemy1(pygame.sprite.Sprite):
     #acceleration variables aming player
     self.accAng = 0
     #max acc(constant)
-    self.acc = 5
+    self.acc = 4
+    self.m_player = player
+    self.flg = True
 
   def update(self, walls, roomnum):
-    if roomnum != 0:
-      self.kill()
-    self.accAng = math.atan2(player.rect.y - self.rect.y, player.rect.x - self.rect.x)
+    # if roomnum != 0:
+    #   self.kill()
+   
+    print(self.acc)
+    # print(self.flg)
+    self.accAng = math.atan2(player.rect.y + player.yvel - self.rect.y, player.rect.x + player.xvel - self.rect.x)
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
     self.rect.x += self.xvel
@@ -95,6 +101,15 @@ class enemy1(pygame.sprite.Sprite):
         self.rect.bottom = block.rect.top
       else:
         self.rect.top = block.rect.bottom
+
+  def changeflg(self):
+    self.flg = not self.flg
+    if self.flg:
+        self.acc = 4
+    else:
+        self.acc = 7
+
+    threading.Timer(2, self.changeflg).start()
 
 #basic room class, with list of walls present
 class Room():
@@ -166,6 +181,8 @@ pygame.display.set_caption("Multiple Maze Madness")
 #starting location of player, right in middle of opening
 player = Player(10, 180)
 enemy = enemy1(player)
+
+enemy.changeflg()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
