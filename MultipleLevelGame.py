@@ -10,6 +10,8 @@ white = (255, 255, 255)
 blue = (0, 0, 255)
 green = (0, 255, 0)
 red = (255, 0, 0)
+orange = (255, 165, 0)
+purple = (128, 0, 128)
 
 #same wall class as before, these are our boundaries
 class Wall(pygame.sprite.Sprite):
@@ -90,8 +92,10 @@ class Room2(Room):
 
     walls = [ [0, 0, 20, 170, blue],
               [0, 210, 20, 190, blue],
-              [0, 0, 600, 20, blue],
-              [0, 380, 600, 20, blue],
+              [0, 0, 280, 20, blue],
+              [320, 0, 280, 20, blue],
+              [0, 380, 280, 20, blue], # bottom left
+              [320, 380, 280, 20, blue], # bottom right
               [580, 0, 20, 170, blue],
               [580, 210, 20, 190, blue],
               [80, 50, 20, 310, blue],
@@ -114,6 +118,36 @@ class Room3(Room):
               [580, 210, 20, 190, red],
               [250, 200, 20, 110, red],
               [350, 90, 20, 110, red]
+            ]
+
+    for item in walls:
+      wall = Wall(item[0], item[1], item[2], item[3], item[4])
+      self.wall_list.add(wall)
+
+class Room4(Room):
+  def __init__(self):
+    Room.__init__(self)
+    
+    walls = [ [0, 0, 20, 400, orange], # left
+              [580, 0, 20, 400, orange], # right
+              [0, 0, 600, 20, orange], # top
+              [0, 380, 280, 20, orange], # bottom left
+              [320, 380, 280, 20, orange] # bottom right
+            ]
+
+    for item in walls:
+      wall = Wall(item[0], item[1], item[2], item[3], item[4])
+      self.wall_list.add(wall)
+
+class Room5(Room):
+  def __init__(self):
+    Room.__init__(self)
+    
+    walls = [ [0, 0, 20, 400, purple], # left
+              [580, 0, 20, 400, purple], # right
+              [0, 380, 600, 20, purple], # bottom
+              [0, 0, 280, 20, purple], # top left
+              [320, 0, 280, 20, purple] # top right
             ]
 
     for item in walls:
@@ -147,6 +181,14 @@ rooms.append(room)
 
 #rooms[2]
 room = Room3()
+rooms.append(room)
+
+#rooms[3]
+room = Room4()
+rooms.append(room)
+
+#rooms[4]
+room = Room5()
 rooms.append(room)
 
 roomNum = 0     #starting room
@@ -211,6 +253,26 @@ while not done:
       roomNum = 0
       currentRoom = rooms[roomNum]
       player.rect.x = -10
+  
+  # set up for only 
+  if player.rect.y < -10:
+    if roomNum == 1:
+      roomNum = 3
+      currentRoom = rooms[roomNum]
+      player.rect.y = 410
+    elif roomNum == 4:
+      roomNum = 1
+      currentRoom = rooms[roomNum]
+      player.rect.y = 410
+  elif player.rect.y > 410:
+    if roomNum == 1:
+      roomNum = 4
+      currentRoom = rooms[roomNum]
+      player.rect.y = -10
+    elif roomNum == 3:
+      roomNum = 1
+      currentRoom = rooms[roomNum]
+      player.rect.y = -10
 
   screen.fill(white)
   all_sprites.draw(screen)
