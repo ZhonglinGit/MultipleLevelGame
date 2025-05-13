@@ -273,7 +273,7 @@ def main():
   room = Room5()
   rooms.append(room)
 
-  roomNum = 4     #starting room
+  roomNum = 0     #starting room
   currentRoom = rooms[roomNum]
 
   while not done:
