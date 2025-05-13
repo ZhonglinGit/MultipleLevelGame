@@ -112,8 +112,10 @@ class enemy1(pygame.sprite.Sprite):
   def changeflg(self):
     self.flg = not self.flg
     if self.flg:
+        self.image.fill(blue)
         self.acc = 4
     else:
+        self.image.fill(red)
         self.acc = 6
     # this is a thread that will run every 2 seconds it only run once so need to keep calling it
 
