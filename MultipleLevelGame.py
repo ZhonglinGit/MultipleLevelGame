@@ -77,19 +77,23 @@ class enemy1(pygame.sprite.Sprite):
     self.acc = 3
     self.m_player = player
     self.flg = True
+    self.roomNum = 0
 
-  def update(self, walls, roomnum):
-    # if roomnum != 0:
-    #   self.kill()
-   
+  def update(self, walls, roomNum):
+    
+    if self.isRoomChanged(roomNum):
+      self.rect.x = 300
+      self.rect.y = 200
+
     print(self.acc)
     # print(self.flg)
-    self.accAng = math.atan2(player.rect.y + player.yvel - self.rect.y, player.rect.x + player.xvel - self.rect.x)
+    self.accAng = math.atan2(self.m_player.rect.y + self.m_player.yvel - self.rect.y, self.m_player.rect.x + self.m_player.xvel - self.rect.x)
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
     self.rect.x += self.xvel
     self.rect.y += self.yvel
 
+    
     wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
     for block in wall_hit_list:
       if self.xvel > 0:
@@ -114,6 +118,12 @@ class enemy1(pygame.sprite.Sprite):
     # this is a thread that will run every 2 seconds it only run once so need to keep calling it
 
     threading.Timer(4, self.changeflg).start()
+  def isRoomChanged(self, roomNum):
+    if self.roomNum != roomNum:
+      self.roomNum = roomNum
+      return True
+    else:
+      return False
 
 #basic room class, with list of walls present
 class Room():
@@ -209,138 +219,160 @@ class Room5(Room):
     for item in walls:
       wall = Wall(item[0], item[1], item[2], item[3], item[4])
       self.wall_list.add(wall)
+def main():
+  pygame.init()
+  screen = pygame.display.set_mode([600, 400])
+  pygame.display.set_caption("Multiple Maze Madness")
 
-pygame.init()
-screen = pygame.display.set_mode([600, 400])
-pygame.display.set_caption("Multiple Maze Madness")
+  #starting location of player, right in middle of opening
+  player = Player(10, 180)
+  enemy = enemy1(player)
 
-#starting location of player, right in middle of opening
-player = Player(10, 180)
-enemy = enemy1(player)
+  enemy.changeflg()
 
-enemy.changeflg()
+  all_sprites = pygame.sprite.Group()
+  all_sprites.add(player)
+  all_sprites.add(enemy)
 
-all_sprites = pygame.sprite.Group()
-all_sprites.add(player)
-all_sprites.add(enemy)
+  clock = pygame.time.Clock()
 
-clock = pygame.time.Clock()
+  done = False
 
-done = False
+  #create a list of rooms so we can access each 
+  rooms = []
 
-#create a list of rooms so we can access each 
-rooms = []
+  #rooms[0]
+  room = Room1()
+  rooms.append(room)
 
-#rooms[0]
-room = Room1()
-rooms.append(room)
+  #rooms[1]
+  room = Room2()
+  rooms.append(room)
 
-#rooms[1]
-room = Room2()
-rooms.append(room)
+  #rooms[2]
+  room = Room3()
+  rooms.append(room)
 
-#rooms[2]
-room = Room3()
-rooms.append(room)
+  #rooms[3]
+  room = Room4()
+  rooms.append(room)
 
-#rooms[3]
-room = Room4()
-rooms.append(room)
+  #rooms[4]
+  room = Room5()
+  rooms.append(room)
 
-#rooms[4]
-room = Room5()
-rooms.append(room)
+  roomNum = 0     #starting room
+  currentRoom = rooms[roomNum]
 
-roomNum = 0     #starting room
-currentRoom = rooms[roomNum]
+  while not done:
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        done = True
+      elif event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_LEFT:
+          player.changespeed(-5, 0)
 
-while not done:
-  for event in pygame.event.get():
-    if event.type == pygame.QUIT:
+        elif event.key == pygame.K_RIGHT:
+          player.changespeed(5, 0)
+
+        elif event.key == pygame.K_UP:
+          player.changespeed(0, -5)
+
+        elif event.key == pygame.K_DOWN:
+          player.changespeed(0, 5)
+
+      elif event.type == pygame.KEYUP:
+        if event.key == pygame.K_LEFT:
+          player.changespeed(5, 0)
+        elif event.key == pygame.K_RIGHT:
+          player.changespeed(-5, 0)
+        elif event.key == pygame.K_UP:
+          player.changespeed(0, 5)
+        elif event.key == pygame.K_DOWN:
+          player.changespeed(0, -5)
+
+    #updates the player with the walls of the current room to detect collision
+    player.update(currentRoom.wall_list)
+
+    enemy.update(currentRoom.wall_list, roomNum)
+
+    wall_hit_list = pygame.sprite.collide_rect(player, enemy)
+
+    if wall_hit_list:
       done = True
-    elif event.type == pygame.KEYDOWN:
-      if event.key == pygame.K_LEFT:
-        player.changespeed(-5, 0)
+      
+    #this handles when to swithf to the next room based on location of player
+    #first if controls when the player exits screen left
+    if player.rect.x < -10:
+      if roomNum == 0:
+        roomNum = 2
+        currentRoom = rooms[roomNum]
+        player.rect.x = 590
+      elif roomNum == 2:
+        roomNum = 1
+        currentRoom = rooms[roomNum]
+        player.rect.x = 590
+      elif roomNum == 1:
+        roomNum = 0
+        currentRoom = rooms[roomNum]
+        player.rect.x = 590
+    #first if controls when the player exits screen right
+    if player.rect.x > 590:
+      if roomNum == 0:
+        roomNum = 1
+        currentRoom = rooms[roomNum]
+        player.rect.x = -10
+      elif roomNum == 1:
+        roomNum = 2
+        currentRoom = rooms[roomNum]
+        player.rect.x = -10
+      elif roomNum == 2:
+        roomNum = 0
+        currentRoom = rooms[roomNum]
+        player.rect.x = -10
+    
+    # set up for only 
+    if player.rect.y < -10:
+      if roomNum == 1:
+        roomNum = 3
+        currentRoom = rooms[roomNum]
+        player.rect.y = 410
+      elif roomNum == 4:
+        roomNum = 1
+        currentRoom = rooms[roomNum]
+        player.rect.y = 410
+    elif player.rect.y > 410:
+      if roomNum == 1:
+        roomNum = 4
+        currentRoom = rooms[roomNum]
+        player.rect.y = -10
+      elif roomNum == 3:
+        roomNum = 1
+        currentRoom = rooms[roomNum]
+        player.rect.y = -10
 
-      elif event.key == pygame.K_RIGHT:
-        player.changespeed(5, 0)
+    screen.fill(white)
+    all_sprites.draw(screen)
+    currentRoom.wall_list.draw(screen)
 
-      elif event.key == pygame.K_UP:
-        player.changespeed(0, -5)
+    pygame.display.flip()
+    clock.tick(30)
 
-      elif event.key == pygame.K_DOWN:
-        player.changespeed(0, 5)
-
-    elif event.type == pygame.KEYUP:
-      if event.key == pygame.K_LEFT:
-        player.changespeed(5, 0)
-      elif event.key == pygame.K_RIGHT:
-        player.changespeed(-5, 0)
-      elif event.key == pygame.K_UP:
-        player.changespeed(0, 5)
-      elif event.key == pygame.K_DOWN:
-        player.changespeed(0, -5)
-
-  #updates the player with the walls of the current room to detect collision
-  player.update(currentRoom.wall_list)
-  
-  enemy.update(currentRoom.wall_list, roomNum)
-
-  #this handles when to swithf to the next room based on location of player
-  #first if controls when the player exits screen left
-  if player.rect.x < -10:
-    if roomNum == 0:
-      roomNum = 2
-      currentRoom = rooms[roomNum]
-      player.rect.x = 590
-    elif roomNum == 2:
-      roomNum = 1
-      currentRoom = rooms[roomNum]
-      player.rect.x = 590
-    elif roomNum == 1:
-      roomNum = 0
-      currentRoom = rooms[roomNum]
-      player.rect.x = 590
-  #first if controls when the player exits screen right
-  if player.rect.x > 590:
-    if roomNum == 0:
-      roomNum = 1
-      currentRoom = rooms[roomNum]
-      player.rect.x = -10
-    elif roomNum == 1:
-      roomNum = 2
-      currentRoom = rooms[roomNum]
-      player.rect.x = -10
-    elif roomNum == 2:
-      roomNum = 0
-      currentRoom = rooms[roomNum]
-      player.rect.x = -10
-  
-  # set up for only 
-  if player.rect.y < -10:
-    if roomNum == 1:
-      roomNum = 3
-      currentRoom = rooms[roomNum]
-      player.rect.y = 410
-    elif roomNum == 4:
-      roomNum = 1
-      currentRoom = rooms[roomNum]
-      player.rect.y = 410
-  elif player.rect.y > 410:
-    if roomNum == 1:
-      roomNum = 4
-      currentRoom = rooms[roomNum]
-      player.rect.y = -10
-    elif roomNum == 3:
-      roomNum = 1
-      currentRoom = rooms[roomNum]
-      player.rect.y = -10
-
-  screen.fill(white)
-  all_sprites.draw(screen)
-  currentRoom.wall_list.draw(screen)
-
+  font = pygame.font.SysFont("calibri", 25)
+  text = font.render("Game Over, (q to quit, c to contiune)", True, white)
+  screen.fill(black)
+  screen.blit(text, [110, 150])
   pygame.display.flip()
-  clock.tick(30)
 
-pygame.quit()
+  xxx = True
+  while xxx:
+    for event in pygame.event.get():
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_q:
+          xxx = False
+          break
+        elif event.key == pygame.K_c:
+          main()
+  pygame.quit()
+  
+main()
