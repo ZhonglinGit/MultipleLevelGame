@@ -91,7 +91,7 @@ class enemy1(pygame.sprite.Sprite):
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
     self.rect.x += self.xvel
-    self.rect.y += self.yvel
+    
 
     
     wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
@@ -100,7 +100,8 @@ class enemy1(pygame.sprite.Sprite):
         self.rect.right = block.rect.left
       else:
         self.rect.left = block.rect.right
-
+        
+    self.rect.y += self.yvel
     wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
     for block in wall_hit_list:
       if self.yvel > 0:
@@ -200,7 +201,13 @@ class Room4(Room):
               [580, 0, 20, 400, orange], # right
               [0, 0, 600, 20, orange], # top
               [0, 380, 280, 20, orange], # bottom left
-              [320, 380, 280, 20, orange] # bottom right
+              [320, 380, 280, 20, orange], # bottom right
+              [100, 100, 20, 100, orange],
+              [100, 100, 100, 20, orange],
+              [250, 200, 20, 100, orange],
+              [250, 200, 100, 20, orange], 
+              [400, 100, 20, 100, orange],
+              [400, 100, 100, 20, orange]
             ]
 
     for item in walls:
@@ -263,7 +270,7 @@ def main():
   room = Room5()
   rooms.append(room)
 
-  roomNum = 0     #starting room
+  roomNum = 3     #starting room
   currentRoom = rooms[roomNum]
 
   while not done:
