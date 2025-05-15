@@ -27,7 +27,7 @@ class Wall(pygame.sprite.Sprite):
     self.rect.y = y
 
 class blackHole(pygame.sprite.Sprite):
-  def __init__(self, roomNum, x, y, acc):
+  def __init__(self, x, y, acc):
     pygame.sprite.Sprite.__init__(self)
     self.image = pygame.Surface([20, 20])
     self.image.fill(black)
@@ -35,15 +35,13 @@ class blackHole(pygame.sprite.Sprite):
     self.rect.x = x
     self.rect.y = y
     self.acc = acc
-    self.roomNum = roomNum
   def changeOpjSpeed(self, opj):
-    if opj.roomNum == self.roomNum:
-      ang = math.atan2(self.rect.y - opj.rect.y, self.rect.x - opj.rect.x)
-      # opj.changespeed(math.sin(ang) * self.acc, math.cos(ang) * self.acc)
-      opj.pullVelX = math.cos(ang) * self.acc
-      opj.pullVelY = math.sin(ang) * self.acc
+    ang = math.atan2(self.rect.y - opj.rect.y, self.rect.x - opj.rect.x)
+    # opj.changespeed(math.sin(ang) * self.acc, math.cos(ang) * self.acc)
+    opj.pullVelX = math.cos(ang) * self.acc
+    opj.pullVelY = math.sin(ang) * self.acc
 
-    if opj.isRoomChanged(self.roomNum):
+    if opj.isRoomChanged(opj.newRoomNum):
       # opj.changespeed(0, 0)
       opj.pullVelX = 0
       opj.pullVelY = 0
@@ -79,7 +77,7 @@ class Player(pygame.sprite.Sprite):
 
 #This detects when we hit the walls
   def update(self, walls):
-
+    #sum of vel
     vx = self.xvel + self.pullVelX
     vy = self.yvel + self.pullVelY
 
@@ -116,18 +114,10 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollideany(self, walls):
             self.rect.y -= sign_y
             break
-    # 处理余数（如果速度不是整数）
+   
     self.rect.y += vy - sign_y * step_y
     if pygame.sprite.spritecollideany(self, walls):
         self.rect.y -= (vy - sign_y * step_y)
-
-    # self.rect.y += vy
-    # wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
-    # for block in wall_hit_list:
-    #   if self.yvel > 0:
-    #     self.rect.bottom = block.rect.top
-    #   else:
-    #     self.rect.top = block.rect.bottom
 
 class enemy1(pygame.sprite.Sprite):
 
@@ -157,6 +147,7 @@ class enemy1(pygame.sprite.Sprite):
 
     print(self.acc)
     # print(self.flg)
+
     self.accAng = math.atan2(self.m_player.rect.y + self.m_player.yvel - self.rect.y, self.m_player.rect.x + self.m_player.xvel - self.rect.x)
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
@@ -187,8 +178,8 @@ class enemy1(pygame.sprite.Sprite):
         self.image.fill(red)
         self.acc = 6
     # this is a thread that will run every 2 seconds it only run once so need to keep calling it
-
     threading.Timer(4, self.changeflg).start()
+
   def isRoomChanged(self, roomNum):
     if self.roomNum != roomNum:
       self.roomNum = roomNum
@@ -307,7 +298,7 @@ def main():
   #starting location of player, right in middle of opening
   player = Player(10, 180)
   enemy = enemy1(player)
-  blackW = blackHole(1, 200, 200, 1)
+  blackW = blackHole(200, 200, 1)
   
 
   enemy.changeflg()
@@ -384,7 +375,7 @@ def main():
     player_hit_list = pygame.sprite.collide_rect(player, enemy)
 
     if player_hit_list:
-      # done = True
+      done = True
       pass
       
     #this handles when to swithf to the next room based on location of player
