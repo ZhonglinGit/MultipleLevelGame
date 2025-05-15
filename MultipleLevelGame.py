@@ -26,6 +26,29 @@ class Wall(pygame.sprite.Sprite):
     self.rect.x = x
     self.rect.y = y
 
+class blackHole(pygame.sprite.Sprite):
+  def __init__(self, roomNum, x, y, acc):
+    pygame.sprite.Sprite.__init__(self)
+    self.image = pygame.Surface([20, 20])
+    self.image.fill(black)
+    self.rect = self.image.get_rect()
+    self.rect.x = x
+    self.rect.y = y
+    self.acc = acc
+    self.roomNum = roomNum
+  def changeOpjSpeed(self, opj):
+    if opj.roomNum == self.roomNum:
+      ang = math.atan2(self.rect.y - opj.rect.y, self.rect.x - opj.rect.x)
+      # opj.changespeed(math.sin(ang) * self.acc, math.cos(ang) * self.acc)
+      opj.pullVelX = math.cos(ang) * self.acc
+      opj.pullVelY = math.sin(ang) * self.acc
+
+    if opj.isRoomChanged(self.roomNum):
+      # opj.changespeed(0, 0)
+      opj.pullVelX = 0
+      opj.pullVelY = 0
+      
+
 #Same player that we've been using throughout
 class Player(pygame.sprite.Sprite):
 
@@ -38,28 +61,74 @@ class Player(pygame.sprite.Sprite):
     self.rect.y = y
     self.xvel = 0
     self.yvel = 0
+    self.pullVelX = 0
+    self.pullVelY = 0
+    self.roomNum = 0
+    self.newRoomNum = 0
 
+  def isRoomChanged(self, roomNum):
+    if self.roomNum != roomNum:
+      self.roomNum = roomNum
+      return True
+    else:
+      return False
   def changespeed(self, x, y):
+
     self.xvel += x
     self.yvel += y
 
 #This detects when we hit the walls
   def update(self, walls):
-    self.rect.x += self.xvel
-    wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
-    for block in wall_hit_list:
-      if self.xvel > 0:
-        self.rect.right = block.rect.left
-      else:
-        self.rect.left = block.rect.right
 
-    self.rect.y += self.yvel
-    wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
-    for block in wall_hit_list:
-      if self.yvel > 0:
-        self.rect.bottom = block.rect.top
-      else:
-        self.rect.top = block.rect.bottom
+    vx = self.xvel + self.pullVelX
+    vy = self.yvel + self.pullVelY
+
+    step_x = int(abs(vx))
+    
+    if vx > 0:
+      sign_x = 1
+    elif vx < 0:
+      sign_x = -1
+    else:
+      sign_x = 0
+    
+    #break the speed into steps, if not it will go through the wall
+    for i in range(step_x):
+        self.rect.x += sign_x
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.x -= sign_x
+            break
+    
+    # for desmos       abs before now add sign back       
+    self.rect.x += vx - sign_x * step_x
+    if pygame.sprite.spritecollideany(self, walls):
+        self.rect.x -= (vx - sign_x * step_x)
+
+    step_y = int(abs(vy))
+    if vy > 0:
+      sign_y = 1
+    elif vy < 0:
+      sign_y = -1
+    else:
+      sign_y = 0
+    for _ in range(step_y):
+        self.rect.y += sign_y
+        if pygame.sprite.spritecollideany(self, walls):
+            self.rect.y -= sign_y
+            break
+    # 处理余数（如果速度不是整数）
+    self.rect.y += vy - sign_y * step_y
+    if pygame.sprite.spritecollideany(self, walls):
+        self.rect.y -= (vy - sign_y * step_y)
+
+    # self.rect.y += vy
+    # wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
+    # for block in wall_hit_list:
+    #   if self.yvel > 0:
+    #     self.rect.bottom = block.rect.top
+    #   else:
+    #     self.rect.top = block.rect.bottom
+
 class enemy1(pygame.sprite.Sprite):
 
   def __init__(self, player):
@@ -82,6 +151,7 @@ class enemy1(pygame.sprite.Sprite):
   def update(self, walls, roomNum):
     
     if self.isRoomChanged(roomNum):
+
       self.rect.x = 300
       self.rect.y = 200
 
@@ -90,10 +160,8 @@ class enemy1(pygame.sprite.Sprite):
     self.accAng = math.atan2(self.m_player.rect.y + self.m_player.yvel - self.rect.y, self.m_player.rect.x + self.m_player.xvel - self.rect.x)
     self.xvel = math.cos(self.accAng) * self.acc
     self.yvel = math.sin(self.accAng) * self.acc
-    self.rect.x += self.xvel
-    
+    self.rect.x += self.xvel 
 
-    
     wall_hit_list = pygame.sprite.spritecollide(self, walls, False)
     for block in wall_hit_list:
       if self.xvel > 0:
@@ -239,12 +307,15 @@ def main():
   #starting location of player, right in middle of opening
   player = Player(10, 180)
   enemy = enemy1(player)
+  blackW = blackHole(1, 200, 200, 1)
+  
 
   enemy.changeflg()
 
   all_sprites = pygame.sprite.Group()
   all_sprites.add(player)
   all_sprites.add(enemy)
+  all_sprites.add(blackW)
 
   clock = pygame.time.Clock()
 
@@ -306,12 +377,15 @@ def main():
     #updates the player with the walls of the current room to detect collision
     player.update(currentRoom.wall_list)
 
+
     enemy.update(currentRoom.wall_list, roomNum)
+    
 
-    wall_hit_list = pygame.sprite.collide_rect(player, enemy)
+    player_hit_list = pygame.sprite.collide_rect(player, enemy)
 
-    if wall_hit_list:
-      done = True
+    if player_hit_list:
+      # done = True
+      pass
       
     #this handles when to swithf to the next room based on location of player
     #first if controls when the player exits screen left
@@ -342,26 +416,35 @@ def main():
         roomNum = 0
         currentRoom = rooms[roomNum]
         player.rect.x = -10
-    
+
+    player.newRoomNum = roomNum
+    blackW.changeOpjSpeed(player)
+
     # set up for only 
-    if player.rect.y < -10:
+    if player.rect.y < 0:
       if roomNum == 1:
         roomNum = 3
         currentRoom = rooms[roomNum]
-        player.rect.y = 410
+        player.rect.y = 390
+        player.changespeed(0, 0)
       elif roomNum == 4:
         roomNum = 1
         currentRoom = rooms[roomNum]
-        player.rect.y = 410
-    elif player.rect.y > 410:
+        player.rect.y = 390
+        player.changespeed(0, 0)
+      
+    elif player.rect.y > 400:
       if roomNum == 1:
         roomNum = 4
         currentRoom = rooms[roomNum]
-        player.rect.y = -10
+        player.rect.y = 0
+        player.changespeed(0, 0)
       elif roomNum == 3:
         roomNum = 1
         currentRoom = rooms[roomNum]
-        player.rect.y = -10
+        player.rect.y = 0
+        player.changespeed(0, 0)
+      
 
     screen.fill(white)
     all_sprites.draw(screen)
